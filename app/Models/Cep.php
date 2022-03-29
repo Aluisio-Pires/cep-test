@@ -8,4 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class Cep extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'cep',
+        'localidade',
+        'uf',
+        'ibge',
+        'ddd',
+        'siafi',
+    ];
 }

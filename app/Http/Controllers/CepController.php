@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Cep;
 use App\Http\Requests\StoreCepRequest;
 use App\Http\Requests\UpdateCepRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
+use Ramsey\Uuid\Type\Integer;
 
 class CepController extends Controller
 {
@@ -43,11 +46,31 @@ class CepController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\Cep  $cep
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function show(Cep $cep)
+    public function show($num)
     {
-        //
+        if($num<10000000 || $num>99999999){
+            return response()->json(['erro'=>'CEP inválido, precisa conter pelo menos 8 caracteres.'], 400);
+        }
+        $cep = Cep::where('cep',$num)->first();
+        if (!$cep){
+            $response = Http::get("https://viacep.com.br/ws/$num/json/")->json();
+            if (in_array('erro',$response)){
+                return response()->json(['erro'=>"CEP inválido!"], 400);
+            }
+
+            $cep = new Cep([
+                'cep' => preg_replace('/[^0-9]/', '', $response['cep']),
+                'localidade'=> $response['localidade'],
+                'uf'=> $response['uf'],
+                'ibge'=> $response['ibge'],
+                'ddd'=> $response['ddd'],
+                'siafi'=> $response['siafi'],
+            ]);
+            $cep->save();
+        }
+        return response()->json($cep, 201);
     }
 
     /**
