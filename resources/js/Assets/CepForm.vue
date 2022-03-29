@@ -33,6 +33,7 @@ import JetInputError from '@/Jetstream/InputError.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import JetActionMessage from '@/Jetstream/ActionMessage.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
+import axios from "axios";
 
 export default defineComponent({
     components: {
@@ -43,6 +44,7 @@ export default defineComponent({
         JetInputError,
         JetLabel,
         JetSecondaryButton,
+
     },
 
     data() {
@@ -61,8 +63,15 @@ export default defineComponent({
                 this.form.errors.cep = 'CEP inválido, precisa conter pelo menos 8 caracteres.'
                 return true
             }
-            this.form.cep = 66666666
-            this.form.errors.cep = null
+            axios.get('/api/cep/'+this.form.cep)
+                .then(response => {
+                    this.localidade = response.data.localidade
+                    this.uf = response.data.uf
+                    this.form.errors.cep = null
+                })
+                .catch(response => {
+                    this.form.errors.cep = "O CEP digitado não existe"
+                })
         },
         maxValue(){
             if(this.form.cep>99999999){
